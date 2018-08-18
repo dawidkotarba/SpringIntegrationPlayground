@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:int-http="http://www.springframework.org/schema/integration/http"
+       xsi:schemaLocation="
+    http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/integration
+    http://www.springframework.org/schema/integration/spring-integration.xsd
+    http://www.springframework.org/schema/integration/http
+    http://www.springframework.org/schema/integration/http/spring-integration-http.xsd">
+
+    <int:channel id="requestChannel"/>
+
+    <int-http:inbound-gateway request-channel="requestChannel"
+                              supported-methods="POST" path="/hello"
+                              request-payload-type="com.dawidkotarba.springIntegrationPlayground.model.Customer">
+        <int-http:request-mapping produces="application/json" consumes="application/json"/>
+    </int-http:inbound-gateway>
+
+    <int:service-activator ref="indboundEndpoint" method="post" input-channel="requestChannel"/>
+
+
+    <int:channel id="kidsChannel"/>
+    <int:channel id="adultsChannel"/>
+
+    <int:router input-channel="requestChannel" ref="ageRouter" method="isAdult">
+        <int:mapping value="true" channel="adultsChannel"/>
+        <int:mapping value="false" channel="kidsChannel"/>
+    </int:router>
+
+    <int:service-activator ref="adultsService" method="serve" input-channel="adultsChannel"/>
+    <int:service-activator ref="kidsService" method="serve" input-channel="kidsChannel"/>
+
+</beans>
