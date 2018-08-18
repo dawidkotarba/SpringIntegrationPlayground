@@ -13,11 +13,11 @@
 
     <int:channel id="requestChannel"/>
 
-    <int-http:inbound-gateway request-channel="requestChannel"
+    <int-http:inbound-channel-adapter channel="requestChannel"
                               supported-methods="POST" path="/hello"
                               request-payload-type="com.dawidkotarba.springIntegrationPlayground.model.Customer">
-        <int-http:request-mapping produces="application/json" consumes="application/json"/>
-    </int-http:inbound-gateway>
+        <int-http:request-mapping consumes="application/json"/>
+    </int-http:inbound-channel-adapter>
 
     <int:service-activator ref="indboundEndpoint" method="post" input-channel="requestChannel"/>
 
