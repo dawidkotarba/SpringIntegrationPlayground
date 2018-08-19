@@ -11,9 +11,10 @@ public class KidsService {
 
     private static final Logger LOG = LoggerFactory.getLogger(KidsService.class);
 
-    public void serve(Message<Customer> msg) {
+    public Message<Customer> serve(Message<Customer> msg) {
         final String login = msg.getPayload().getLogin();
         LOG.info("{} is a kid!", login);
+        return msg;
     }
 
 }

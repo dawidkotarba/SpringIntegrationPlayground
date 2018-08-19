@@ -3,36 +3,47 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:int="http://www.springframework.org/schema/integration"
        xmlns:int-http="http://www.springframework.org/schema/integration/http"
+       xmlns:int-file="http://www.springframework.org/schema/integration/file"
        xsi:schemaLocation="
     http://www.springframework.org/schema/beans
     http://www.springframework.org/schema/beans/spring-beans.xsd
     http://www.springframework.org/schema/integration
     http://www.springframework.org/schema/integration/spring-integration.xsd
     http://www.springframework.org/schema/integration/http
-    http://www.springframework.org/schema/integration/http/spring-integration-http.xsd">
+    http://www.springframework.org/schema/integration/http/spring-integration-http.xsd
+    http://www.springframework.org/schema/integration/file
+    http://www.springframework.org/schema/integration/file/spring-integration-file.xsd">
 
     <int:channel id="requestChannel"/>
 
     <int-http:inbound-channel-adapter channel="requestChannel"
-                              supported-methods="POST" path="/hello"
-                              request-payload-type="com.dawidkotarba.springIntegrationPlayground.model.Customer">
+                                      supported-methods="POST" path="/hello"
+                                      request-payload-type="com.dawidkotarba.springIntegrationPlayground.model.Customer">
         <int-http:request-mapping consumes="application/json"/>
     </int-http:inbound-channel-adapter>
 
-    <int:service-activator ref="indboundEndpoint" method="post1" input-channel="requestChannel" output-channel="routeChannel"/>
-    <int:service-activator ref="indboundEndpoint" method="post2" input-channel="requestChannel" output-channel="routeChannel"/>
-    <int:service-activator ref="indboundEndpoint" method="post3" input-channel="requestChannel" output-channel="routeChannel"/>
+    <int:service-activator ref="indboundEndpoint" method="post1" input-channel="requestChannel"
+                           output-channel="routeChannel"/>
+    <int:service-activator ref="indboundEndpoint" method="post2" input-channel="requestChannel"
+                           output-channel="routeChannel"/>
+    <int:service-activator ref="indboundEndpoint" method="post3" input-channel="requestChannel"
+                           output-channel="routeChannel"/>
 
     <int:channel id="routeChannel"/>
     <int:channel id="kidsChannel"/>
     <int:channel id="adultsChannel"/>
+    <int:channel id="joinChannel"/>
 
     <int:router input-channel="routeChannel" ref="ageRouter" method="isAdult">
         <int:mapping value="true" channel="adultsChannel"/>
         <int:mapping value="false" channel="kidsChannel"/>
     </int:router>
 
-    <int:service-activator ref="adultsService" method="serve" input-channel="adultsChannel"/>
-    <int:service-activator ref="kidsService" method="serve" input-channel="kidsChannel"/>
+    <int:service-activator ref="adultsService" method="serve" input-channel="adultsChannel" output-channel="joinChannel"/>
+    <int:service-activator ref="kidsService" method="serve" input-channel="kidsChannel" output-channel="joinChannel"/>
+
+    <int:transformer output-channel="filesOut" input-channel="joinChannel" ref="customerToStringTransformer"/>
+    <int-file:outbound-channel-adapter id="filesOut" directory="outbound_files" mode="APPEND" append-new-line="true"
+                                       filename-generator-expression="'result.txt'"/>
 
 </beans>

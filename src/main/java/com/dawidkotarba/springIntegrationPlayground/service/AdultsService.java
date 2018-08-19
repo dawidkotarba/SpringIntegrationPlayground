@@ -11,8 +11,9 @@ public class AdultsService {
 
     private static final Logger LOG = LoggerFactory.getLogger(AdultsService.class);
 
-    public void serve(Message<Customer> msg) {
+    public Message<Customer> serve(Message<Customer> msg) {
         final String login = msg.getPayload().getLogin();
         LOG.info("{} is an adult!", login);
+        return msg;
     }
 }
