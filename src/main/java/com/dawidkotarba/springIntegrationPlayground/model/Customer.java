@@ -15,12 +15,13 @@ public class Customer {
     private long id;
     private String login;
     private int age;
+    private CustomerType customerType;
 
     public long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(final long id) {
         this.id = id;
     }
 
@@ -28,7 +29,7 @@ public class Customer {
         return login;
     }
 
-    public void setLogin(String login) {
+    public void setLogin(final String login) {
         this.login = login;
     }
 
@@ -36,15 +37,27 @@ public class Customer {
         return age;
     }
 
-    public void setAge(int age) {
+    public void setAge(final int age) {
         this.age = age;
     }
 
+    public CustomerType getCustomerType() {
+        return customerType;
+    }
+
+    public void setCustomerType(final CustomerType customerType) {
+        this.customerType = customerType;
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Customer customer = (Customer) o;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final Customer customer = (Customer) o;
         return id == customer.id &&
                 age == customer.age &&
                 Objects.equals(login, customer.login);
@@ -61,6 +74,7 @@ public class Customer {
                 "id=" + id +
                 ", login='" + login + '\'' +
                 ", age=" + age +
+                ", customerType=" + customerType +
                 '}';
     }
 }

@@ -14,22 +14,29 @@
     http://www.springframework.org/schema/integration/file
     http://www.springframework.org/schema/integration/file/spring-integration-file.xsd">
 
-    <int:channel id="requestChannel"/>
+    <!-- POST REST -->
+    <int:channel id="restInputChannel">
+        <int:interceptors>
+            <bean class="com.dawidkotarba.springIntegrationPlayground.interceptor.LoggingInterceptor"/>
+        </int:interceptors>
+    </int:channel>
     <int:channel id="transformChannel"/>
 
-    <int-http:inbound-channel-adapter channel="requestChannel"
+    <int-http:inbound-channel-adapter channel="restInputChannel"
                                       supported-methods="POST" path="/hello"
                                       request-payload-type="com.dawidkotarba.springIntegrationPlayground.model.Customer">
         <int-http:request-mapping consumes="application/json"/>
     </int-http:inbound-channel-adapter>
 
-    <int:service-activator ref="indboundEndpoint" method="post1" input-channel="requestChannel"
+    <!-- Service activators for REST (round-robin) -->
+    <int:service-activator ref="indboundEndpoint" method="post1" input-channel="restInputChannel"
                            output-channel="transformChannel"/>
-    <int:service-activator ref="indboundEndpoint" method="post2" input-channel="requestChannel"
+    <int:service-activator ref="indboundEndpoint" method="post2" input-channel="restInputChannel"
                            output-channel="transformChannel"/>
-    <int:service-activator ref="indboundEndpoint" method="post3" input-channel="requestChannel"
+    <int:service-activator ref="indboundEndpoint" method="post3" input-channel="restInputChannel"
                            output-channel="transformChannel"/>
 
+    <!-- Transformers -->
     <int:chain input-channel="transformChannel" output-channel="routeChannel">
         <int:transformer ref="customerLoginTransformer"/>
         <int:transformer ref="customerAgeTransformer"/>
@@ -40,17 +47,41 @@
     <int:channel id="adultsChannel"/>
     <int:channel id="joinChannel"/>
 
-    <int:router input-channel="routeChannel" ref="ageRouter" method="isAdult">
+    <!-- Routing -->
+    <int:router input-channel="routeChannel" expression="payload.age >=  18">
         <int:mapping value="true" channel="adultsChannel"/>
         <int:mapping value="false" channel="kidsChannel"/>
     </int:router>
+
+    <!--enrichers-->
+    <int:enricher input-channel="adultsChannel">
+        <int:property name="customerType"
+                      type="com.dawidkotarba.springIntegrationPlayground.model.CustomerType" value="ADULT"/>
+    </int:enricher>
+
+    <int:enricher input-channel="kidsChannel">
+        <int:property name="customerType" type="com.dawidkotarba.springIntegrationPlayground.model.CustomerType"
+                      value="KID"/>
+    </int:enricher>
 
     <int:service-activator ref="adultsService" method="serve" input-channel="adultsChannel"
                            output-channel="joinChannel"/>
     <int:service-activator ref="kidsService" method="serve" input-channel="kidsChannel" output-channel="joinChannel"/>
 
+    <!-- Send customer object to file-->
     <int:transformer output-channel="filesOut" input-channel="joinChannel" ref="customerToStringTransformer"/>
     <int-file:outbound-channel-adapter id="filesOut" directory="outbound_files" mode="APPEND" append-new-line="true"
                                        filename-generator-expression="'result.txt'"/>
+
+
+    <!-- Inbound files -->
+    <int:channel id="filesToStringChannel"/>
+    <int-file:inbound-channel-adapter id="filesIn"
+                                      directory="file:inbound_files" prevent-duplicates="true" ignore-hidden="true">
+        <int:poller id="defaultPoller" default="true" fixed-rate="1000"/>
+    </int-file:inbound-channel-adapter>
+    <int-file:file-to-string-transformer input-channel="filesIn" output-channel="filesToStringChannel"/>
+    <int:service-activator input-channel="filesToStringChannel" ref="fileInService" method="print"/>
+
 
 </beans>
