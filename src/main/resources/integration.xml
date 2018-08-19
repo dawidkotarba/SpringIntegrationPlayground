@@ -15,6 +15,7 @@
     http://www.springframework.org/schema/integration/file/spring-integration-file.xsd">
 
     <int:channel id="requestChannel"/>
+    <int:channel id="transformChannel"/>
 
     <int-http:inbound-channel-adapter channel="requestChannel"
                                       supported-methods="POST" path="/hello"
@@ -23,11 +24,16 @@
     </int-http:inbound-channel-adapter>
 
     <int:service-activator ref="indboundEndpoint" method="post1" input-channel="requestChannel"
-                           output-channel="routeChannel"/>
+                           output-channel="transformChannel"/>
     <int:service-activator ref="indboundEndpoint" method="post2" input-channel="requestChannel"
-                           output-channel="routeChannel"/>
+                           output-channel="transformChannel"/>
     <int:service-activator ref="indboundEndpoint" method="post3" input-channel="requestChannel"
-                           output-channel="routeChannel"/>
+                           output-channel="transformChannel"/>
+
+    <int:chain input-channel="transformChannel" output-channel="routeChannel">
+        <int:transformer ref="customerLoginTransformer"/>
+        <int:transformer ref="customerAgeTransformer"/>
+    </int:chain>
 
     <int:channel id="routeChannel"/>
     <int:channel id="kidsChannel"/>
@@ -39,7 +45,8 @@
         <int:mapping value="false" channel="kidsChannel"/>
     </int:router>
 
-    <int:service-activator ref="adultsService" method="serve" input-channel="adultsChannel" output-channel="joinChannel"/>
+    <int:service-activator ref="adultsService" method="serve" input-channel="adultsChannel"
+                           output-channel="joinChannel"/>
     <int:service-activator ref="kidsService" method="serve" input-channel="kidsChannel" output-channel="joinChannel"/>
 
     <int:transformer output-channel="filesOut" input-channel="joinChannel" ref="customerToStringTransformer"/>
