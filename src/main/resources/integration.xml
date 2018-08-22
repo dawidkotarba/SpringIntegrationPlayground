@@ -36,13 +36,28 @@
     <int:service-activator ref="indboundEndpoint" method="post3" input-channel="restInputChannel"
                            output-channel="transformChannel"/>
 
-    <!-- Transformers -->
+    <!--Chain-->
     <int:chain input-channel="transformChannel" output-channel="routeChannel">
+        <!-- Transformers-->
         <int:transformer ref="customerLoginTransformer"/>
         <int:transformer ref="customerAgeTransformer"/>
+
+        <!--header enrichers-->
+        <int:header-enricher>
+            <int:header name="customerGeneratedId" ref="customerIdGenerationService" method="generate"/>
+        </int:header-enricher>
     </int:chain>
 
-    <int:channel id="routeChannel"/>
+    <int:channel id="routeChannel">
+        <int:interceptors>
+            <int:wire-tap channel="logRouteChannel"/>
+        </int:interceptors>
+    </int:channel>
+    <int:logging-channel-adapter
+            id="logRouteChannel"
+            expression="'Value of header host: '.concat(headers.host).concat(', value of generated ID: '.concat(headers.customerGeneratedId))"
+    />
+
     <int:channel id="kidsChannel"/>
     <int:channel id="adultsChannel"/>
     <int:channel id="joinChannel"/>

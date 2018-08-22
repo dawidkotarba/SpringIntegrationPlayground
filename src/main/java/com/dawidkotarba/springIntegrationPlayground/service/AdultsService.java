@@ -12,7 +12,7 @@ public class AdultsService {
 
     public Customer serve(final Customer msg) {
         final String login = msg.getLogin();
-        LOG.info("{} is {}!", login, msg.getCustomerType());
+        LOG.info("{} is {}.", login, msg.getCustomerType());
         return msg;
     }
 }
